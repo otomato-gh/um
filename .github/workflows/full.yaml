@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ main, develop ]
 
+env:
+  COMPONENT: users-api
+
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
@@ -65,7 +68,7 @@ jobs:
       with:
         context: .
         load: true
-        tags: users-api:latest
+        tags: ${COMPONENT}:latest
 
     - name: Install Grype
       run: |
@@ -73,7 +76,7 @@ jobs:
 
     - name: Scan image with Grype
       run: |
-        grype user-management-api:latest --fail-on medium -o sarif > grype-report.sarif
+        grype ${COMPONENT}:latest --fail-on medium -o sarif > grype-report.sarif
 
     - name: Upload Grype scan results to Github Code Scanning
       uses: github/codeql-action/upload-sarif@v2
