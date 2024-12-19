@@ -22,7 +22,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install flake8 pylint black bandit nose
+        pip install flake8 pylint black bandit bandit[sarif] nose
         pip install -r requirements.txt
 
     - name: Run Black code formatter
@@ -39,7 +39,12 @@ jobs:
       run: pylint **/*.py || true  # Allow non-zero exit to not fail the workflow
 
     - name: Run Bandit security scanner
-      run: bandit -r . -f custom
+      run: bandit -r . -f sarif -o bandit-report.sarif
+    
+    - name: Upload Bandit scan results to Github Code Scanning
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: bandit-report.sarif
 
     - name: Run Tests
       run: nosetests tests.py
@@ -60,7 +65,7 @@ jobs:
       with:
         context: .
         load: true
-        tags: user-management-api:latest
+        tags: users-api:latest
 
     - name: Install Grype
       run: |
@@ -68,7 +73,12 @@ jobs:
 
     - name: Scan image with Grype
       run: |
-        grype user-management-api:latest --fail-on medium
+        grype user-management-api:latest --fail-on medium -o sarif > grype-report.sarif
+
+    - name: Upload Grype scan results to Github Code Scanning
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: grype-report.sarif
 
   security-scan:
     runs-on: ubuntu-latest
